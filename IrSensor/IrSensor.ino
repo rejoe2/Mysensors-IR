@@ -44,14 +44,14 @@
 
 int RECV_PIN = 8;
 
-#define CHILD_1  3  // childId
+#define CHILD_ID_IR  3  // childId
 
 IRsend irsend;
 IRrecv irrecv(RECV_PIN);
 IRdecode decoder;
 //decode_results results;
 unsigned int Buffer[RAWBUF];
-MyMessage msg(CHILD_1, V_VAR1);
+MyMessage msgIr(CHILD_ID_IR, V_IR_RECEIVE);
 
 void setup()  
 {  
@@ -64,8 +64,8 @@ void presentation()  {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("IR Sensor", "1.0");
 
-  // Register a sensors to  Use binary light for test purposes.
-  present(CHILD_1, S_LIGHT);
+  // Register the sensor als IR Node
+  present(CHILD_ID_IR, S_IR);
 }
 
 void loop() 
@@ -78,21 +78,23 @@ void loop()
     char buffer[10];
     sprintf(buffer, "%08lx", decoder.value);
     // Send ir result to gw
-    send(msg.set(buffer));
+    send(msg.setIr(buffer));
   }
 }
 
 
 
 void receive(const MyMessage &message) {
-  // We only expect one type of message from controller. But we better check anyway.
-  if (message.type==V_LIGHT) {
-     int incomingRelayStatus = message.getInt();
-     if (incomingRelayStatus == 1) {
-      irsend.send(NEC, 0x1EE17887, 32); // Vol up yamaha ysp-900
-     } else {
-      irsend.send(NEC, 0x1EE1F807, 32); // Vol down yamaha ysp-900
-     }
+  const char *irData;
+  // We will try to send a complete send command from controller side, e.g. "NEC, 0x1EE17887, 32"
+  if (message.type==V_IR_SEND) {
+     Serial.println(F("Received IR send command...")); 
+     irData = message.getString(); 
+     Serial.print(F("Code: 0x")); 
+     Serial.println(irData); 
+     irsend.send(irData); 
+     } 
+
      // Start receiving ir again...
     irrecv.enableIRIn(); 
   }
