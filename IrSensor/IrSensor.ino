@@ -88,10 +88,12 @@ void receive(const MyMessage &message) {
   const char *irData;
   // We will try to send a complete send command from controller side, e.g. "NEC, 0x1EE17887, 32"
   if (message.type==V_IR_SEND) {
-     Serial.println(F("Received IR send command...")); 
      irData = message.getString(); 
-     Serial.print(F("Code: 0x")); 
+     #ifdef MY_DEBUG
+     Serial.println(F("Received IR send command...")); 
+     //Serial.print(F("Code: 0x")); //we will only need this in case we cannot send the complete command set
      Serial.println(irData); 
+     #endif
      irsend.send(irData); 
      } 
 
