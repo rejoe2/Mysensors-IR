@@ -1,35 +1,35 @@
 /**
- * The MySensors Arduino library handles the wireless radio link and protocol
- * between your home built sensors/actuators and HA controller of choice.
- * The sensors forms a self healing radio network with optional repeaters. Each
- * repeater and gateway builds a routing tables in EEPROM which keeps track of the
- * network topology allowing messages to be routed to nodes.
- *
- * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2015 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
- *
- * Documentation: http://www.mysensors.org
- * Support Forum: http://forum.mysensors.org
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * version 2 as published by the Free Software Foundation.
- *
+   The MySensors Arduino library handles the wireless radio link and protocol
+   between your home built sensors/actuators and HA controller of choice.
+   The sensors forms a self healing radio network with optional repeaters. Each
+   repeater and gateway builds a routing tables in EEPROM which keeps track of the
+   network topology allowing messages to be routed to nodes.
+
+   Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+   Copyright (C) 2013-2015 Sensnology AB
+   Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+
+   Documentation: http://www.mysensors.org
+   Support Forum: http://forum.mysensors.org
+
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   version 2 as published by the Free Software Foundation.
+
  *******************************
- *
- * REVISION HISTORY
- * Version 1.0 - Henrik EKblad
- * 
- * DESCRIPTION
- * Example sketch showing how to control ir devices
- * An IR LED must be connected to Arduino PWM pin 3.
- * An optional ir receiver can be connected to PWM pin 8. 
- * All receied ir signals will be sent to gateway device stored in VAR_1.
- * When binary light on is clicked - sketch will send volume up ir command
- * When binary light off is clicked - sketch will send volume down ir command
- * http://www.mysensors.org/build/ir
- */
+
+   REVISION HISTORY
+   Version 1.0 - Henrik EKblad
+
+   DESCRIPTION
+   Example sketch showing how to control ir devices
+   An IR LED must be connected to Arduino PWM pin 3.
+   An optional ir receiver can be connected to PWM pin 8.
+   All receied ir signals will be sent to gateway device stored in VAR_1.
+   When binary light on is clicked - sketch will send volume up ir command
+   When binary light off is clicked - sketch will send volume down ir command
+   http://www.mysensors.org/build/ir
+*/
 
 // Enable debug prints
 //#define MY_DEBUG
@@ -53,8 +53,8 @@ IRdecode decoder;
 unsigned int Buffer[RAWBUF];
 MyMessage msgIr(CHILD_ID_IR, V_IR_RECEIVE);
 
-void setup()  
-{  
+void setup()
+{
   irrecv.enableIRIn(); // Start the ir receiver
   decoder.UseExtnBuf(Buffer);
 
@@ -68,17 +68,17 @@ void presentation()  {
   present(CHILD_ID_IR, S_IR);
 }
 
-void loop() 
+void loop()
 {
   if (irrecv.GetResults(&decoder)) {
-    irrecv.resume(); 
+    irrecv.resume();
     decoder.decode();
     decoder.DumpResults();
-        
+
     char buffer[10];
     sprintf(buffer, "%08lx", decoder.value);
     // Send ir result to gw
-    send(msg.setIr(buffer));
+    send(msgIr.set(buffer));
   }
 }
 
@@ -87,21 +87,23 @@ void loop()
 void receive(const MyMessage &message) {
   const char *irData;
   // We will try to send a complete send command from controller side, e.g. "NEC, 0x1EE17887, 32"
-  if (message.type==V_IR_SEND) {
-     irData = message.getString(); 
-     #ifdef MY_DEBUG
-     Serial.println(F("Received IR send command...")); 
-     //Serial.print(F("Code: 0x")); //we will only need this in case we cannot send the complete command set
-     Serial.println(irData); 
-     #endif
-     irsend.send(irData); 
-     } 
-
-     // Start receiving ir again...
-    irrecv.enableIRIn(); 
+  if (message.type == V_IR_SEND) {
+    irData = message.getString();
+#ifdef MY_DEBUG
+    Serial.println(F("Received IR send command..."));
+    //Serial.print(F("Code: 0x")); //we will only need this in case we cannot send the complete command set
+    Serial.println(irData);
+#endif
+    char arg0 = irData[0];
+    int arg1 = irData[1];
+    uint8_t arg2 = irData[2];
+    irsend.send(arg0, arg1, arg2);
   }
+
+  // Start receiving ir again...
+  irrecv.enableIRIn();
 }
-    
+
 // Dumps out the decode_results structure.
 // Call this after IRrecv::decode()
 // void * to work around compiler issue
@@ -111,20 +113,20 @@ void receive(const MyMessage &message) {
   int count = results->rawlen;
   if (results->decode_type == UNKNOWN) {
     Serial.print("Unknown encoding: ");
-  } 
+  }
   else if (results->decode_type == NEC) {
     Serial.print("Decoded NEC: ");
-  } 
+  }
   else if (results->decode_type == SONY) {
     Serial.print("Decoded SONY: ");
-  } 
+  }
   else if (results->decode_type == RC5) {
     Serial.print("Decoded RC5: ");
-  } 
+  }
   else if (results->decode_type == RC6) {
     Serial.print("Decoded RC6: ");
   }
-  else if (results->decode_type == PANASONIC) {	
+  else if (results->decode_type == PANASONIC) {
     Serial.print("Decoded PANASONIC - Address: ");
     Serial.print(results->panasonicAddress,HEX);
     Serial.print(" Value: ");
@@ -143,13 +145,13 @@ void receive(const MyMessage &message) {
   for (int i = 0; i < count; i++) {
     if ((i % 2) == 1) {
       Serial.print(results->rawbuf[i]*USECPERTICK, DEC);
-    } 
+    }
     else {
       Serial.print(-(int)results->rawbuf[i]*USECPERTICK, DEC);
     }
     Serial.print(" ");
   }
   Serial.println("");
-}
+  }
 */
 
