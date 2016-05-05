@@ -33,6 +33,7 @@
 
 // Enable debug prints
 //#define MY_DEBUG
+#define USE_DUMP //should print out lots of info to serial (ElectricRCAircraftGuy feature?)
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
@@ -40,23 +41,30 @@
 
 #include <SPI.h>
 #include <MySensor.h>
-#include <IRLib.h>
+#include <IRLib.h> //ElectricRCAircraftGuy version
+
 
 int RECV_PIN = 8;
 
 #define CHILD_ID_IR  3  // childId
 
 IRsend irsend;
-IRrecv irrecv(RECV_PIN);
-IRdecode decoder;
+IRrecv My_Receiver(RECV_PIN);
+IRdecode My_Decoder;
 //decode_results results;
-unsigned int Buffer[RAWBUF];
+//unsigned int Buffer[RAWBUF];
 MyMessage msgIr(CHILD_ID_IR, V_IR_RECEIVE);
 
 void setup()
 {
-  irrecv.enableIRIn(); // Start the ir receiver
-  decoder.UseExtnBuf(Buffer);
+  // My_Decoder.useDoubleBuffer(Buffer); //uncomment to use; requires the "extraBuffer" to be uncommented above
+  //Try different values here for Mark_Excess. 50us is a good starting guess. See detailed notes above for more info.
+  My_Receiver.Mark_Excess = 50; //us; mark/space correction factor
+  //Optional: set LED to blink while IR codes are being received
+  // My_Receiver.blink13(true); //blinks whichever LED is connected to LED_BUILTIN on your board, usually pin 13
+  //                            //-see here for info on LED_BUILTIN: https://www.arduino.cc/en/Reference/Constants
+  My_Receiver.setBlinkLED(13, true); //same as above, except you can change the LED pin number if you like
+  My_Receiver.enableIRIn(); // Start the receiver
 
 }
 
@@ -70,15 +78,47 @@ void presentation()  {
 
 void loop()
 {
-  if (irrecv.GetResults(&decoder)) {
-    irrecv.resume();
-    decoder.decode();
-    decoder.DumpResults();
+  if (My_Receiver.getResults(&My_Decoder)) //if IR data is ready to be decoded
+  {
+    //1) decode it
+    My_Decoder.decode();
+    //filter out zeros and NEC repeats
+    const char rec_value = My_Decoder.value;
+    if (rec_value != 0xffffffff && rec_value != 0x0) {
 
-    char buffer[10];
-    sprintf(buffer, "%08lx", decoder.value);
-    // Send ir result to gw
-    send(msgIr.set(buffer));
+      Serial.println("decoding");
+
+      //2) print results
+      //FOR BASIC OUTPUT ONLY:
+      Serial.print(Pnames(My_Decoder.decode_type));
+      Serial.print(", ");
+      Serial.print(My_Decoder.value, HEX);
+      Serial.print(", ");
+      Serial.println(My_Decoder.bits);
+      // Serial.println();
+      //FOR EXTENSIVE OUTPUT:
+      //My_Decoder.dumpResults();
+      char buffer[24];
+//      uint8_t IrType; //don't know how to send type as char; may not be necessary
+//      IrType = My_Decoder.decode_type;
+      uint8_t IrBits = My_Decoder.bits;   
+      sprintf(buffer, "%i, %08lX, %i", My_Decoder.decode_type, My_Decoder.value, IrBits);
+//      buffer = buffer+(", ");
+//      buffer = buffer+("%08lx", My_Decoder.value);
+//      buffer = buffer+(", ");
+//      buffer = buffer+(My_Decoder.bits);
+      //sprintf(buffer, "%08lx", My_Decoder.value);
+      // Send ir result to gw
+      send(msgIr.set(buffer));
+      Serial.println(buffer);
+    }
+    //3) resume receiver (ONLY CALL THIS FUNCTION IF SINGLE-BUFFERED); comment this line out if double-buffered
+    /*for single buffer use; do NOT resume until AFTER done calling all decoder
+      functions that use the last data acquired, such as decode and dumpResults; if using a double
+      buffer, don't use resume() at all unless you called My_Receiver.detachInterrupt() previously
+      to completely stop receiving, and now want to resume IR receiving.*/
+    My_Receiver.resume();
+
   }
 }
 
@@ -94,64 +134,39 @@ void receive(const MyMessage &message) {
     //Serial.print(F("Code: 0x")); //we will only need this in case we cannot send the complete command set
     Serial.println(irData);
 #endif
-    char arg0 = irData[0];
-    int arg1 = irData[1];
-    uint8_t arg2 = irData[2];
-    irsend.send(arg0, arg1, arg2);
+
+//splitting the received send command needs to be completed
+//also transfer from numeric representation to char for protocol type
+//could be obsolete, if protocol is sent as text    
+    uint8_t arg0;
+    arg0 = (uint8_t *) {irData}[0];
+    int arg1;
+    arg1 = {irData}[1];
+    uint8_t arg2;
+    arg2 = (uint8_t *) {irData}[2];
+    Serial.println(arg0);
+    Serial.println(arg1, HEX);
+    Serial.println(arg2);
+
+    //irsend.send(arg0, arg1, arg2);  
   }
 
   // Start receiving ir again...
-  irrecv.enableIRIn();
+  My_Receiver.resume();
+
+  //  irrecv.enableIRIn();
 }
+/* codesniplet from Aircraft.. IRserial_remote example
+    void loop() {
+  if (Serial.available ()>0) {
+    protocol = Serial.parseInt (); parseDelimiter();
+    code     = parseHex ();        parseDelimiter();
+    bits     = Serial.parseInt (); parseDelimiter();
+    Serial.print("Prot:");  Serial.print(protocol);
+    Serial.print(" Code:"); Serial.print(code,HEX);
+    Serial.print(" Bits:"); Serial.println(bits);
+    My_Sender.send(IRTYPES(protocol), code, bits);
+  }
+  }*/
 
-// Dumps out the decode_results structure.
-// Call this after IRrecv::decode()
-// void * to work around compiler issue
-//void dump(void *v) {
-//  decode_results *results = (decode_results *)v
-/*void dump(decode_results *results) {
-  int count = results->rawlen;
-  if (results->decode_type == UNKNOWN) {
-    Serial.print("Unknown encoding: ");
-  }
-  else if (results->decode_type == NEC) {
-    Serial.print("Decoded NEC: ");
-  }
-  else if (results->decode_type == SONY) {
-    Serial.print("Decoded SONY: ");
-  }
-  else if (results->decode_type == RC5) {
-    Serial.print("Decoded RC5: ");
-  }
-  else if (results->decode_type == RC6) {
-    Serial.print("Decoded RC6: ");
-  }
-  else if (results->decode_type == PANASONIC) {
-    Serial.print("Decoded PANASONIC - Address: ");
-    Serial.print(results->panasonicAddress,HEX);
-    Serial.print(" Value: ");
-  }
-  else if (results->decode_type == JVC) {
-     Serial.print("Decoded JVC: ");
-  }
-  Serial.print(results->value, HEX);
-  Serial.print(" (");
-  Serial.print(results->bits, DEC);
-  Serial.println(" bits)");
-  Serial.print("Raw (");
-  Serial.print(count, DEC);
-  Serial.print("): ");
-
-  for (int i = 0; i < count; i++) {
-    if ((i % 2) == 1) {
-      Serial.print(results->rawbuf[i]*USECPERTICK, DEC);
-    }
-    else {
-      Serial.print(-(int)results->rawbuf[i]*USECPERTICK, DEC);
-    }
-    Serial.print(" ");
-  }
-  Serial.println("");
-  }
-*/
 
