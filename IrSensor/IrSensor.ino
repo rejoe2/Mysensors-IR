@@ -102,7 +102,7 @@ void loop()
 //      uint8_t IrType; //don't know how to send type as char; may not be necessary
 //      IrType = My_Decoder.decode_type;
       uint8_t IrBits = My_Decoder.bits;   
-      sprintf(buffer, "%i, %08lX, %i", My_Decoder.decode_type, My_Decoder.value, IrBits);
+      sprintf(buffer, "%i, 0x%08lX, %i", My_Decoder.decode_type, My_Decoder.value, IrBits);
 //      buffer = buffer+(", ");
 //      buffer = buffer+("%08lx", My_Decoder.value);
 //      buffer = buffer+(", ");
@@ -138,6 +138,7 @@ void receive(const MyMessage &message) {
 //splitting the received send command needs to be completed
 //also transfer from numeric representation to char for protocol type
 //could be obsolete, if protocol is sent as text    
+/*
     uint8_t arg0;
     arg0 = (uint8_t *) {irData}[0];
     int arg1;
@@ -149,6 +150,7 @@ void receive(const MyMessage &message) {
     Serial.println(arg2);
 
     //irsend.send(arg0, arg1, arg2);  
+ */
   }
 
   // Start receiving ir again...
