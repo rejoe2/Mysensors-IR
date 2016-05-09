@@ -32,7 +32,7 @@
 */
 
 // Enable debug prints
-#define MY_DEBUG
+//#define MY_DEBUG
 #define USE_DUMP //should print out lots of info to serial (ElectricRCAircraftGuy feature?)
 
 // Enable and select radio type attached
@@ -41,8 +41,8 @@
 
 #include <SPI.h>
 #include <MySensor.h>
-#include <IRLib.h> //ElectricRCAircraftGuy version
-//#include <irmp.h> // aus https://www.mikrocontroller.net/articles/IRMP
+//#include <IRLib.h> //ElectricRCAircraftGuy version
+#include <irmp.h> // aus https://www.mikrocontroller.net/articles/IRMP
 
 int RECV_PIN = 8;
 
@@ -99,18 +99,14 @@ void loop()
       //FOR EXTENSIVE OUTPUT:
       //My_Decoder.dumpResults();
       char buffer[24];
-      //      uint8_t IrType; //don't know how to send type as char; may not be necessary
-      //      IrType = My_Decoder.decode_type;
-      uint8_t IrBits = My_Decoder.bits;
-      String IRType_string = Pnames(My_Decoder.decode_type);
-      char IRType[IRType_string.length() + 1];
-      IRType_string.toCharArray(IRType, IRType_string.length() + 1);
-
-      sprintf(buffer, "%s,0x%08lX,%i", IRType, My_Decoder.value, IrBits);
-      //      buffer = buffer+(", ");
-      //      buffer = buffer+("%08lx", My_Decoder.value);
-      //      buffer = buffer+(", ");
-      //      buffer = buffer+(My_Decoder.bits);
+//      uint8_t IrType; //don't know how to send type as char; may not be necessary
+//      IrType = My_Decoder.decode_type;
+      uint8_t IrBits = My_Decoder.bits;   
+      sprintf(buffer, "%i, 0x%08lX, %i", My_Decoder.decode_type, My_Decoder.value, IrBits);
+//      buffer = buffer+(", ");
+//      buffer = buffer+("%08lx", My_Decoder.value);
+//      buffer = buffer+(", ");
+//      buffer = buffer+(My_Decoder.bits);
       //sprintf(buffer, "%08lx", My_Decoder.value);
       // Send ir result to gw
       send(msgIr.set(buffer));
@@ -139,22 +135,22 @@ void receive(const MyMessage &message) {
     Serial.println(irData);
 #endif
 
-    //splitting the received send command needs to be completed
-    //also transfer from numeric representation to char for protocol type
-    //could be obsolete, if protocol is sent as text
-    /*
-        uint8_t arg0;
-        arg0 = (uint8_t *) {irData}[0];
-        int arg1;
-        arg1 = {irData}[1];
-        uint8_t arg2;
-        arg2 = (uint8_t *) {irData}[2];
-        Serial.println(arg0);
-        Serial.println(arg1, HEX);
-        Serial.println(arg2);
+//splitting the received send command needs to be completed
+//also transfer from numeric representation to char for protocol type
+//could be obsolete, if protocol is sent as text    
+/*
+    uint8_t arg0;
+    arg0 = (uint8_t *) {irData}[0];
+    int arg1;
+    arg1 = {irData}[1];
+    uint8_t arg2;
+    arg2 = (uint8_t *) {irData}[2];
+    Serial.println(arg0);
+    Serial.println(arg1, HEX);
+    Serial.println(arg2);
 
-        //irsend.send(arg0, arg1, arg2);
-    */
+    //irsend.send(arg0, arg1, arg2);  
+ */
   }
 
   // Start receiving ir again...
