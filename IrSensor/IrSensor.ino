@@ -91,9 +91,9 @@ void loop()
       //2) print results
       //FOR BASIC OUTPUT ONLY:
       Serial.print(Pnames(My_Decoder.decode_type));
-      Serial.print(", ");
+      Serial.print(" ");
       Serial.print(My_Decoder.value, HEX);
-      Serial.print(", ");
+      Serial.print(" ");
       Serial.println(My_Decoder.bits);
       // Serial.println();
       //FOR EXTENSIVE OUTPUT:
@@ -106,12 +106,7 @@ void loop()
       char IRType[IRType_string.length() + 1];
       IRType_string.toCharArray(IRType, IRType_string.length() + 1);
 
-      sprintf(buffer, "%s,0x%08lX,%i", IRType, My_Decoder.value, IrBits);
-      //      buffer = buffer+(", ");
-      //      buffer = buffer+("%08lx", My_Decoder.value);
-      //      buffer = buffer+(", ");
-      //      buffer = buffer+(My_Decoder.bits);
-      //sprintf(buffer, "%08lx", My_Decoder.value);
+      sprintf(buffer, "%s 0x%08lX %i", IRType, My_Decoder.value, IrBits);
       // Send ir result to gw
       send(msgIr.set(buffer));
       Serial.println(buffer);
@@ -126,8 +121,6 @@ void loop()
   }
 }
 
-
-
 void receive(const MyMessage &message) {
   const char *irData;
   // We will try to send a complete send command from controller side, e.g. "NEC, 0x1EE17887, 32"
@@ -140,21 +133,38 @@ void receive(const MyMessage &message) {
 #endif
 
     //splitting the received send command needs to be completed
-    //also transfer from numeric representation to char for protocol type
-    //could be obsolete, if protocol is sent as text
-    /*
-        uint8_t arg0;
-        arg0 = (uint8_t *) {irData}[0];
-        int arg1;
-        arg1 = {irData}[1];
-        uint8_t arg2;
-        arg2 = (uint8_t *) {irData}[2];
-        Serial.println(arg0);
-        Serial.println(arg1, HEX);
-        Serial.println(arg2);
+/*    char* protocol = "0";
+    long* code = 0;
+    char* bitsChar = "0";
+    uint8_t bits = 0;
+    char *token[2][20];
+    int i = 0;
+    token[0] = strtok(irData, ",");
 
-        //irsend.send(arg0, arg1, arg2);
-    */
+    while ( token != NULL ) {
+      i++;
+      token[i] = strtok(NULL, ",");
+    }
+
+
+    //uint8_t pos_del = 0;
+    //char* pos = strchr(irData,',');
+    //memcpy(protocol, irData,((unsigned int) pos)-1);
+    //strncpy(protocol, irData, pos_del - 1);
+    //    protocol = IRDATA.substr(0, IRDATA.find(",", 0) - 1);
+    //irData = irData.substr(pos_1, irData.length());
+    //    code = irData.substr(0, irData.find(",", 0) - 1);
+    //    irData = irData.substr(irData.find(",", 0), irData.length());
+    //    bits = ((uint8_t) irData);
+    memcpy (protocol, token[0], sizeof(token[0]) ); //protocol = (char *) token[0];
+//    code  = (int) token[1]; //.toInt();
+//    bits = (uint8_t) token[2]; //.toInt();
+    Serial.println(protocol);
+    Serial.println(code, HEX);
+    Serial.println(irData);
+
+    //irsend.send(memcpy(irData, );
+*/
   }
 
   // Start receiving ir again...
@@ -162,17 +172,4 @@ void receive(const MyMessage &message) {
 
   //  irrecv.enableIRIn();
 }
-/* codesniplet from Aircraft.. IRserial_remote example
-    void loop() {
-  if (Serial.available ()>0) {
-    protocol = Serial.parseInt (); parseDelimiter();
-    code     = parseHex ();        parseDelimiter();
-    bits     = Serial.parseInt (); parseDelimiter();
-    Serial.print("Prot:");  Serial.print(protocol);
-    Serial.print(" Code:"); Serial.print(code,HEX);
-    Serial.print(" Bits:"); Serial.println(bits);
-    My_Sender.send(IRTYPES(protocol), code, bits);
-  }
-  }*/
-
 
