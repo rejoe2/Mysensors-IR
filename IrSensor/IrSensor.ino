@@ -42,7 +42,7 @@
 #include <SPI.h>
 #include <MySensor.h>
 #include <IRLib.h> //ElectricRCAircraftGuy version
-//#include <irmp.h> // aus https://www.mikrocontroller.net/articles/IRMP
+
 
 int RECV_PIN = 8;
 
@@ -90,23 +90,22 @@ void loop()
 
       //2) print results
       //FOR BASIC OUTPUT ONLY:
+      Serial.print("Protocol:");
       Serial.print(Pnames(My_Decoder.decode_type));
+      Serial.print(",");
+      Serial.print(My_Decoder.decode_type);
       Serial.print(" ");
       Serial.print(My_Decoder.value, HEX);
       Serial.print(" ");
       Serial.println(My_Decoder.bits);
-      // Serial.println();
       //FOR EXTENSIVE OUTPUT:
       //My_Decoder.dumpResults();
       char buffer[24];
-      //      uint8_t IrType; //don't know how to send type as char; may not be necessary
-      //      IrType = My_Decoder.decode_type;
       uint8_t IrBits = My_Decoder.bits;
       String IRType_string = Pnames(My_Decoder.decode_type);
       char IRType[IRType_string.length() + 1];
-      IRType_string.toCharArray(IRType, IRType_string.length() + 1);
-
-      sprintf(buffer, "%s 0x%08lX %i", IRType, My_Decoder.value, IrBits);
+      IRType_string.toCharArray(IRType,IRType_string.length() + 1);
+      sprintf(buffer, "%s, %i 0x%08lX %i", IRType, My_Decoder.decode_type, My_Decoder.value, IrBits);
       // Send ir result to gw
       send(msgIr.set(buffer));
       Serial.println(buffer);
@@ -121,6 +120,8 @@ void loop()
   }
 }
 
+
+
 void receive(const MyMessage &message) {
   const char *irData;
   // We will try to send a complete send command from controller side, e.g. "NEC, 0x1EE17887, 32"
@@ -132,44 +133,36 @@ void receive(const MyMessage &message) {
     Serial.println(irData);
 #endif
 
-    //splitting the received send command needs to be completed
-/*    char* protocol = "0";
-    long* code = 0;
-    char* bitsChar = "0";
-    uint8_t bits = 0;
-    char *token[2][20];
+//splitting the received send command needs to be completed
+//also transfer from numeric representation to char for protocol type
+//could be obsolete, if protocol is sent as text
     int i = 0;
-    token[0] = strtok(irData, ",");
+    char* arg[3];
+    unsigned char protocol;
+    unsigned long code;
+    unsigned int bits;
 
-    while ( token != NULL ) {
-      i++;
-      token[i] = strtok(NULL, ",");
+    char* irString = strdup(irData);
+    char* token = strtok(irString," ");
+
+    while(token != NULL){
+       arg[i] = token;
+       token = strtok(NULL, " ");
+       i++;
     }
+    
+    Serial.print("Protocol:"); Serial.print(arg[0]);
+    Serial.print(" Code:"); Serial.print(arg[1]);
+    Serial.print(" Bits:"); Serial.println(arg[2]);
 
+    protocol = atoi(arg[0]);
+    code = strtoul(arg[1], NULL, 0);
+    bits = atoi(arg[2]);
 
-    //uint8_t pos_del = 0;
-    //char* pos = strchr(irData,',');
-    //memcpy(protocol, irData,((unsigned int) pos)-1);
-    //strncpy(protocol, irData, pos_del - 1);
-    //    protocol = IRDATA.substr(0, IRDATA.find(",", 0) - 1);
-    //irData = irData.substr(pos_1, irData.length());
-    //    code = irData.substr(0, irData.find(",", 0) - 1);
-    //    irData = irData.substr(irData.find(",", 0), irData.length());
-    //    bits = ((uint8_t) irData);
-    memcpy (protocol, token[0], sizeof(token[0]) ); //protocol = (char *) token[0];
-//    code  = (int) token[1]; //.toInt();
-//    bits = (uint8_t) token[2]; //.toInt();
-    Serial.println(protocol);
-    Serial.println(code, HEX);
-    Serial.println(irData);
-
-    //irsend.send(memcpy(irData, );
-*/
+    irsend.send(protocol,code,bits);
+    free(irString);
   }
 
   // Start receiving ir again...
   My_Receiver.resume();
-
-  //  irrecv.enableIRIn();
 }
-
