@@ -27,12 +27,13 @@
    An IR LED must be connected to Arduino PWM pin 3.
    An optional ir receiver can be connected to PWM pin 8.
    All received ir signals from PIN 8 will be sent to gateway device stored in IR_RECEIVED.
-   Node is prepared to send IR commands. Connecet a IR LED to PIN 3 and send IR_SEND commands
-   from your controller to the node. Format needed is "protocol code irbits", eg. "1 0x1EE17887 32" for Vol up yamaha ysp-900.
+   NEW: The Node expects real IR commands to process via the IR_SEND variable (instead of "on/off" via V_LIGHT).
+   Variable format to be sent form controller side is: "protocol code irbits", eg. "1 0x1EE17887 32" 
+   for Vol up yamaha ysp-900 (assuming NEC-codes are mapped to protocol #1 in your IRLib).
    
    IMPORTANT:
    The IRLib used here is Gabriel Staples version available at https://github.com/ElectricRCAircraftGuy/IRLib, 
-   IR commands are adopted apropriately!
+   so IR commands are different from the standard IRLib delivered with MySensors!
    http://www.mysensors.org/build/ir
 */
 
