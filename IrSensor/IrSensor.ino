@@ -82,14 +82,10 @@ void loop()
   {
     //1) decode it
     My_Decoder.decode();
-    //filter out zeros and NEC repeats
+    //filter out zeros for not recognized codes and NEC repeats
     const char rec_value = My_Decoder.value;
     if (rec_value != 0xffffffff && rec_value != 0x0) {
-
       Serial.println("decoding");
-
-      //2) print results
-      //FOR BASIC OUTPUT ONLY:
       Serial.print("Protocol:");
       Serial.print(Pnames(My_Decoder.decode_type));
       Serial.print(",");
@@ -105,10 +101,14 @@ void loop()
       String IRType_string = Pnames(My_Decoder.decode_type);
       char IRType[IRType_string.length() + 1];
       IRType_string.toCharArray(IRType,IRType_string.length() + 1);
-      sprintf(buffer, "%s, %i 0x%08lX %i", IRType, My_Decoder.decode_type, My_Decoder.value, IrBits);
+      sprintf(buffer, "%i 0x%08lX %i, %s", My_Decoder.decode_type, My_Decoder.value, IrBits, IRType);
       // Send ir result to gw
       send(msgIr.set(buffer));
+#ifdef MY_DEBUG
+      //2) print results
+      //FOR BASIC OUTPUT ONLY:
       Serial.println(buffer);
+#endif
     }
     //3) resume receiver (ONLY CALL THIS FUNCTION IF SINGLE-BUFFERED); comment this line out if double-buffered
     /*for single buffer use; do NOT resume until AFTER done calling all decoder
@@ -150,15 +150,14 @@ void receive(const MyMessage &message) {
        token = strtok(NULL, " ");
        i++;
     }
-    
+#ifdef MY_DEBUG
     Serial.print("Protocol:"); Serial.print(arg[0]);
     Serial.print(" Code:"); Serial.print(arg[1]);
     Serial.print(" Bits:"); Serial.println(arg[2]);
-
+#endif
     protocol = atoi(arg[0]);
     code = strtoul(arg[1], NULL, 0);
     bits = atoi(arg[2]);
-
     irsend.send(protocol,code,bits);
     free(irString);
   }
