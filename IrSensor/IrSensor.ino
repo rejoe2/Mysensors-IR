@@ -28,11 +28,11 @@
    An optional ir receiver can be connected to PWM pin 8.
    All received ir signals from PIN 8 will be sent to gateway device stored in IR_RECEIVED.
    NEW: The Node expects real IR commands to process via the IR_SEND variable (instead of "on/off" via V_LIGHT).
-   Variable format to be sent form controller side is: "protocol code irbits", eg. "1 0x1EE17887 32" 
+   Variable format to be sent form controller side is: "protocol code irbits", eg. "1 0x1EE17887 32"
    for Vol up yamaha ysp-900 (assuming NEC-codes are mapped to protocol #1 in your IRLib).
-   
+
    IMPORTANT:
-   The IRLib used here is Gabriel Staples version available at https://github.com/ElectricRCAircraftGuy/IRLib, 
+   The IRLib used here is Gabriel Staples version available at https://github.com/ElectricRCAircraftGuy/IRLib,
    so IR commands are different from the standard IRLib delivered with MySensors!
    http://www.mysensors.org/build/ir
 */
@@ -86,25 +86,25 @@ void loop()
   {
     //1) decode it
     My_Decoder.decode();
+    Serial.println("decoding");
+    Serial.print("Protocol:");
+    Serial.print(Pnames(My_Decoder.decode_type));
+    Serial.print(",");
+    Serial.print(My_Decoder.decode_type);
+    Serial.print(" ");
+    Serial.print(My_Decoder.value, HEX);
+    Serial.print(" ");
+    Serial.println(My_Decoder.bits);
+    //FOR EXTENSIVE OUTPUT:
+    //My_Decoder.dumpResults();
     //filter out zeros for not recognized codes and NEC repeats
     const char rec_value = My_Decoder.value;
     if (rec_value != 0xffffffff && rec_value != 0x0) {
-      Serial.println("decoding");
-      Serial.print("Protocol:");
-      Serial.print(Pnames(My_Decoder.decode_type));
-      Serial.print(",");
-      Serial.print(My_Decoder.decode_type);
-      Serial.print(" ");
-      Serial.print(My_Decoder.value, HEX);
-      Serial.print(" ");
-      Serial.println(My_Decoder.bits);
-      //FOR EXTENSIVE OUTPUT:
-      //My_Decoder.dumpResults();
       char buffer[24];
       uint8_t IrBits = My_Decoder.bits;
       String IRType_string = Pnames(My_Decoder.decode_type);
       char IRType[IRType_string.length() + 1];
-      IRType_string.toCharArray(IRType,IRType_string.length() + 1);
+      IRType_string.toCharArray(IRType, IRType_string.length() + 1);
       sprintf(buffer, "%i 0x%08lX %i, %s", My_Decoder.decode_type, My_Decoder.value, IrBits, IRType);
       // Send ir result to gw
       send(msgIr.set(buffer));
@@ -141,12 +141,12 @@ void receive(const MyMessage &message) {
     unsigned int bits;
 
     char* irString = strdup(irData);
-    char* token = strtok(irString," ");
+    char* token = strtok(irString, " ");
 
-    while(token != NULL){
-       arg[i] = token;
-       token = strtok(NULL, " ");
-       i++;
+    while (token != NULL) {
+      arg[i] = token;
+      token = strtok(NULL, " ");
+      i++;
     }
 #ifdef MY_DEBUG
     Serial.print("Protocol:"); Serial.print(arg[0]);
@@ -156,7 +156,7 @@ void receive(const MyMessage &message) {
     protocol = atoi(arg[0]);
     code = strtoul(arg[1], NULL, 0);
     bits = atoi(arg[2]);
-    irsend.send(protocol,code,bits);
+    irsend.send(protocol, code, bits);
     free(irString);
   }
 
