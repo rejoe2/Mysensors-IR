@@ -38,7 +38,7 @@
 */
 
 // Enable debug prints
-#define MY_DEBUG
+//#define MY_DEBUG
 #define USE_DUMP //should print out lots of info to serial (ElectricRCAircraftGuy feature?)
 
 // Enable and select radio type attached
