@@ -20,14 +20,19 @@
 
    REVISION HISTORY
    Version 1.0 - Henrik EKblad
+   Version 1.1 - rknipp and rejoe2
 
    DESCRIPTION
    Example sketch showing how to control ir devices
    An IR LED must be connected to Arduino PWM pin 3.
    An optional ir receiver can be connected to PWM pin 8.
-   All receied ir signals will be sent to gateway device stored in VAR_1.
-   When binary light on is clicked - sketch will send volume up ir command
-   When binary light off is clicked - sketch will send volume down ir command
+   All received ir signals from PIN 8 will be sent to gateway device stored in IR_RECEIVED.
+   Node is prepared to send IR commands. Connecet a IR LED to PIN 3 and send IR_SEND commands
+   from your controller to the node. Format needed is "protocol code irbits", eg. "1 0x1EE17887 32" for Vol up yamaha ysp-900.
+   
+   IMPORTANT:
+   The IRLib used here is Gabriel Staples version available at https://github.com/ElectricRCAircraftGuy/IRLib, 
+   IR commands are adopted apropriately!
    http://www.mysensors.org/build/ir
 */
 
@@ -41,7 +46,7 @@
 
 #include <SPI.h>
 #include <MySensor.h>
-#include <IRLib.h> //ElectricRCAircraftGuy version
+#include <IRLib.h> //Gabriel Staples version!
 
 
 int RECV_PIN = 8;
@@ -51,8 +56,6 @@ int RECV_PIN = 8;
 IRsend irsend;
 IRrecv My_Receiver(RECV_PIN);
 IRdecode My_Decoder;
-//decode_results results;
-//unsigned int Buffer[RAWBUF];
 MyMessage msgIr(CHILD_ID_IR, V_IR_RECEIVE);
 
 void setup()
@@ -70,7 +73,7 @@ void setup()
 
 void presentation()  {
   // Send the sketch version information to the gateway and Controller
-  sendSketchInfo("IR Sensor", "1.0");
+  sendSketchInfo("IR Sensor", "1.1");
 
   // Register the sensor als IR Node
   present(CHILD_ID_IR, S_IR);
@@ -120,22 +123,16 @@ void loop()
   }
 }
 
-
-
 void receive(const MyMessage &message) {
   const char *irData;
-  // We will try to send a complete send command from controller side, e.g. "NEC, 0x1EE17887, 32"
+  // Complete send command from controller side is needed, e.g. "1 0x1EE17887 32"
   if (message.type == V_IR_SEND) {
     irData = message.getString();
 #ifdef MY_DEBUG
     Serial.println(F("Received IR send command..."));
-    //Serial.print(F("Code: 0x")); //we will only need this in case we cannot send the complete command set
     Serial.println(irData);
 #endif
 
-//splitting the received send command needs to be completed
-//also transfer from numeric representation to char for protocol type
-//could be obsolete, if protocol is sent as text
     int i = 0;
     char* arg[3];
     unsigned char protocol;
