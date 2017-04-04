@@ -21,6 +21,7 @@
    REVISION HISTORY
    Version 1.0 - Henrik EKblad
    Version 1.1 - rknipp and rejoe2
+   Version 1.1.1 - rknipp
 
    DESCRIPTION
    Example sketch showing how to control ir devices
@@ -52,7 +53,7 @@
 
 int RECV_PIN = 8;
 
-#define CHILD_ID_IR  3  // childId
+#define CHILD_ID_IR  1  // childId
 
 IRsend irsend;
 IRrecv My_Receiver(RECV_PIN);
