@@ -51,7 +51,7 @@
 #include <IRLib.h> //Gabriel Staples version!
 
 
-int RECV_PIN = 3;
+int RECV_PIN = 2; //3 is used for sending; as MySensors with nRF not really uses interrupts this should be possible
 
 #define CHILD_ID_IR  1  // childId
 
