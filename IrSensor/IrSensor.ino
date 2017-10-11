@@ -51,12 +51,12 @@
 #include <IRLib.h> //Gabriel Staples version!
 
 
-int RECV_PIN = 8;
+int RECV_PIN = 3;
 
 #define CHILD_ID_IR  1  // childId
 
 IRsend irsend;
-IRrecv My_Receiver(RECV_PIN);
+IRrecvPCI My_Receiver(RECV_PIN-2);
 IRdecode My_Decoder;
 MyMessage msgIr(CHILD_ID_IR, V_IR_RECEIVE);
 
