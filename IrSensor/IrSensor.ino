@@ -159,8 +159,9 @@ void receive(const MyMessage &message) {
     bits = atoi(arg[2]);
     irsend.send(protocol, code, bits);
     free(irString);
+    // Start receiving ir again...
+    My_Receiver.enableIRIn()();
   }
 
-  // Start receiving ir again...
-  My_Receiver.resume();
+  
 }
