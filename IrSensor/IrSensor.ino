@@ -160,7 +160,7 @@ void receive(const MyMessage &message) {
     irsend.send(protocol, code, bits);
     free(irString);
     // Start receiving ir again...
-    My_Receiver.enableIRIn()();
+    My_Receiver.enableIRIn();
   }
 
   
