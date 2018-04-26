@@ -33,14 +33,13 @@
    for Vol up yamaha ysp-900 (assuming NEC-codes are mapped to protocol #1 in your IRLib).
 
    IMPORTANT:
-   The IRLib used here is Gabriel Staples version available at https://github.com/ElectricRCAircraftGuy/IRLib,
-   so IR commands are different from the standard IRLib delivered with MySensors!
+   Version back again using standard IRLib to be found at https://github.com/z3t0/Arduino-IRremote (V. 2.2.3)
    http://www.mysensors.org/build/ir
 */
 
 // Enable debug prints
 //#define MY_DEBUG
-#define USE_DUMP //should print out lots of info to serial (ElectricRCAircraftGuy feature?)
+//#define USE_DUMP //should print out lots of info to serial (ElectricRCAircraftGuy feature?)
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
@@ -48,7 +47,8 @@
 
 #include <SPI.h>
 #include <MySensors.h>
-#include <IRLib.h> //Gabriel Staples version!
+#include <IRremote.h>
+//#include <IRLib.h> //Gabriel Staples version!
 
 
 int RECV_PIN = 8;
@@ -57,25 +57,25 @@ int RECV_PIN = 8;
 
 IRsend irsend;
 IRrecv My_Receiver(RECV_PIN);
-IRdecode My_Decoder;
+//IRdecode My_Decoder;
 MyMessage msgIr(CHILD_ID_IR, V_IR_RECEIVE);
 
 void setup()
 {
   // My_Decoder.useDoubleBuffer(Buffer); //uncomment to use; requires the "extraBuffer" to be uncommented above
   //Try different values here for Mark_Excess. 50us is a good starting guess. See detailed notes above for more info.
-  My_Receiver.Mark_Excess = 50; //us; mark/space correction factor
+  //My_Receiver.Mark_Excess = 50; //us; mark/space correction factor
   //Optional: set LED to blink while IR codes are being received
   // My_Receiver.blink13(true); //blinks whichever LED is connected to LED_BUILTIN on your board, usually pin 13
   //                            //-see here for info on LED_BUILTIN: https://www.arduino.cc/en/Reference/Constants
-  My_Receiver.setBlinkLED(13, true); //same as above, except you can change the LED pin number if you like
+  //My_Receiver.setBlinkLED(13, true); //same as above, except you can change the LED pin number if you like
   My_Receiver.enableIRIn(); // Start the receiver
 
 }
 
 void presentation()  {
   // Send the sketch version information to the gateway and Controller
-  sendSketchInfo("IR Sensor", "1.1.1");
+  sendSketchInfo("IR Sensor", "1.1.2");
 
   // Register the sensor als IR Node
   present(CHILD_ID_IR, S_IR);
@@ -83,7 +83,7 @@ void presentation()  {
 
 void loop()
 {
-  if (My_Receiver.getResults(&My_Decoder)) //if IR data is ready to be decoded
+  if (My_Receiver.decode(&results)) //if IR data is ready to be decoded
   {
     //1) decode it
     My_Decoder.decode();
